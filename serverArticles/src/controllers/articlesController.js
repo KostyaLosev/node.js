@@ -42,4 +42,39 @@ router.post('/', async (req, res) => {
   }
 });
 
+router.put('/:id', async (req, res) => {
+  try {
+    const id = req.params.id;
+    const { title, content } = req.body || {};
+
+    if (!title || typeof title !== 'string' || title.trim().length === 0) {
+      return res.status(400).json({ error: 'Title is required' });
+    }
+    if (!content || typeof content !== 'string' || content.trim().length === 0) {
+      return res.status(400).json({ error: 'Content is required' });
+    }
+
+    const updated = await articlesService.updateArticle(id, { title: title.trim(), content });
+    if (!updated) return res.status(404).json({ error: 'Article not found' });
+
+    res.json(updated);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to update article' });
+  }
+});
+
+router.delete('/:id', async (req, res) => {
+  try {
+    const id = req.params.id;
+    const deleted = await articlesService.deleteArticle(id);
+    if (!deleted) return res.status(404).json({ error: 'Article not found' });
+
+    res.json({ ok: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to delete article' });
+  }
+});
+
 module.exports = router;
