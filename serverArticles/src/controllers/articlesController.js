@@ -2,6 +2,10 @@ const express = require('express');
 const router = express.Router();
 const articlesService = require('../services/articlesService');
 
+function isValidString(value) {
+  return typeof value === 'string' && value.trim().length > 0;
+}
+
 router.get('/', async (req, res) => {
   try {
     const list = await articlesService.listArticles();
@@ -27,10 +31,10 @@ router.get('/:id', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     const { title, content } = req.body || {};
-    if (!title || typeof title !== 'string' || title.trim().length === 0) {
+    if (!isValidString(title)) {
       return res.status(400).json({ error: 'Title is required' });
     }
-    if (!content || typeof content !== 'string' || content.trim().length === 0) {
+    if (!isValidString(content)) {
       return res.status(400).json({ error: 'Content is required' });
     }
 
@@ -47,10 +51,10 @@ router.put('/:id', async (req, res) => {
     const id = req.params.id;
     const { title, content } = req.body || {};
 
-    if (!title || typeof title !== 'string' || title.trim().length === 0) {
+    if (!isValidString(title)) {
       return res.status(400).json({ error: 'Title is required' });
     }
-    if (!content || typeof content !== 'string' || content.trim().length === 0) {
+    if (!isValidString(content)) {
       return res.status(400).json({ error: 'Content is required' });
     }
 
