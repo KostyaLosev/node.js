@@ -1,11 +1,21 @@
 <h2>Create New Article</h2>
-
 <form [formGroup]="form" (ngSubmit)="save()">
   <label>Title</label>
   <input formControlName="title" placeholder="Enter title" />
-
+  @if (errors.title) {
+    <div class="error">
+      {{ errors.title }}
+    </div>
+  }
   <label>Content</label>
   <quill-editor formControlName="content"></quill-editor>
-
+  @if (errors.content) {
+    <div class="error">
+      {{ errors.content }}
+    </div>
+  }
+  <div class="form-buttons">
+  <button type="button" routerLink="/">Cancel</button>
   <button type="submit" [disabled]="form.invalid">Save</button>
+</div>
 </form>

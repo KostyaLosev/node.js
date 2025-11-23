@@ -4,11 +4,12 @@ import { ArticleService } from '../../services/articlie.service';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { QuillModule } from 'ngx-quill';
 import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-article-create',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, QuillModule],
+  imports: [CommonModule, ReactiveFormsModule, QuillModule, RouterModule],
   templateUrl: './article-create.html',
   styleUrl: './article-create.scss'
 })
@@ -16,6 +17,8 @@ export class ArticleCreate {
   private svc = inject(ArticleService);
   private router = inject(Router);
   private fb = inject(FormBuilder);
+
+  errors: any = {};
 
   form = this.fb.group({
     title: ['', Validators.required],
@@ -27,7 +30,22 @@ export class ArticleCreate {
 
     this.svc.create(this.form.value as any).subscribe({
       next: () => this.router.navigate(['/']),
-      error: e => alert('Error: ' + e.message)
+      error: e => {
+        this.errors = {};
+        const msg = e?.error?.error;
+
+        if (typeof msg === 'string') {
+          if (msg.toLowerCase().includes('title')) {
+            this.errors.title = msg;
+            this.form.get('title')?.setErrors({ server: msg });
+          }
+
+          if (msg.toLowerCase().includes('content')) {
+            this.errors.content = msg;
+            this.form.get('content')?.setErrors({ server: msg });
+          }
+        }
+      }
     });
   }
 }
