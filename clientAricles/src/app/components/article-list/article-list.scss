@@ -56,8 +56,8 @@ p {
     align-items: center;
     padding: 14px 18px;
     border-bottom: 1px solid #eee;
-    cursor: pointer;
     transition: background 0.2s ease;
+    cursor: pointer;
 
     &:hover {
       background: #f1f7ff;
@@ -75,6 +75,34 @@ p {
     span {
       color: #888;
       font-size: 13px;
+    }
+
+    .delete {
+      background: #e53935;
+      color: #fff;
+      border: none;
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background 0.2s ease;
+      margin-left: 12px;
+
+      &:hover {
+        background: #d32f2f;
+      }
+
+      &:active {
+        transform: scale(0.95);
+      }
+    }
+
+    .left {
+      flex: 1;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
     }
   }
 }

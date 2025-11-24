@@ -14,6 +14,10 @@
       {{ errors.content }}
     </div>
   }
+
+  <label>Attachments</label>
+  <input type="file" multiple (change)="onFileSelected($event)" accept=".jpg,.jpeg,.png,.pdf" />
+
   <div class="form-buttons">
   <button type="button" routerLink="/">Cancel</button>
   <button type="submit" [disabled]="form.invalid">Save</button>

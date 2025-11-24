@@ -27,6 +27,55 @@ h2 {
   font-weight: 600;
 }
 
+/* ======= ATTACHMENTS BLOCK ======= */
+
+h3 {
+  margin-top: 20px;
+  font-size: 18px;
+}
+
+.attachments {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.attachment-card {
+  width: 140px;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  cursor: pointer;
+  text-align: center;
+  background: #fafafa;
+  transition: 0.2s;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+
+  &:hover {
+    background: #f2f2f2;
+    transform: translateY(-2px);
+  }
+}
+
+.preview {
+  width: 100%;
+  height: 90px;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+.icon {
+  font-size: 40px;
+  padding-top: 15px;
+}
+
+.name {
+  margin-top: 8px;
+  font-size: 13px;
+  word-break: break-all;
+}
+
 .content {
   background: #fff;
   border-radius: 10px;

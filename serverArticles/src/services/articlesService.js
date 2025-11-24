@@ -71,10 +71,23 @@ async function deleteArticle(id) {
   return true;
 }
 
+async function addAttachments(id, newFiles) {
+  const article = await getArticleById(id);
+  if (!article) return null;
+
+  article.attachments = article.attachments || [];
+  article.attachments.push(...newFiles);
+
+  const file = path.join(DATA_DIR, `${id}.json`);
+  await fs.writeFile(file, JSON.stringify(article, null, 2), 'utf8');
+  return article;
+}
+
 module.exports = {
   listArticles,
   getArticleById,
   createArticle,
   updateArticle,
-  deleteArticle
+  deleteArticle,
+  addAttachments
 };
