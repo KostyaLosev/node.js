@@ -83,11 +83,33 @@ async function addAttachments(id, newFiles) {
   return article;
 }
 
+async function removeAttachment(articleId, filename) {
+    const article = await getArticleById(articleId);
+    if (!article || !article.attachments) return null;
+
+    const index = article.attachments.findIndex(att => att.filename === filename);
+    if (index === -1) return article;
+
+    const filePath = path.join(__dirname, '..', 'uploads', article.attachments[index].filename);
+    if (await fs.pathExists(filePath)) {
+        await fs.remove(filePath);
+    }
+
+    article.attachments.splice(index, 1);
+
+    const file = path.join(DATA_DIR, `${articleId}.json`);
+    await fs.writeFile(file, JSON.stringify(article, null, 2), 'utf8');
+
+    return article;
+}
+
+
 module.exports = {
   listArticles,
   getArticleById,
   createArticle,
   updateArticle,
   deleteArticle,
-  addAttachments
+  addAttachments,
+  removeAttachment
 };

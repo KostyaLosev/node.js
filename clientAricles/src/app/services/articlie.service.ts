@@ -69,4 +69,18 @@ export class ArticleService {
   delete(id: string): Observable<void> {
     return this.http.delete<void>(`${this.base}/${id}`);
   }
+
+  deleteAttachment(articleId: string, filename: string): Observable<Article> {
+    return this.http.delete<Article>(`${this.base}/${articleId}/attachments/${filename}`).pipe(
+        map(article => {
+            if (article.attachments) {
+                article.attachments = article.attachments.map(f => ({
+                    ...f,
+                    url: `${this.uploadBase}${f.path}`
+                }));
+            }
+            return article;
+        })
+    );
+}
 }

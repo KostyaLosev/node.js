@@ -1,21 +1,29 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, OnDestroy  } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { ArticleService } from '../../services/articlie.service';
+import { ArticleService, Attachment } from '../../services/articlie.service';
 import { FormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { QuillModule } from 'ngx-quill';
+import { WebSocketService } from '../../services/web-socket.service';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-article-edit',
-  imports: [CommonModule, ReactiveFormsModule, QuillModule],
+  imports: [CommonModule, ReactiveFormsModule, QuillModule, MatSnackBarModule],
   templateUrl: './article-edit.html',
   styleUrl: './article-edit.scss',
 })
-export class ArticleEdit {
+export class ArticleEdit implements OnDestroy {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private svc = inject(ArticleService);
   private fb = inject(FormBuilder);
+  private ws = inject(WebSocketService);
+  uploadError = signal<string | null>(null);
+  private destroy$ = new Subject<void>();
+  private snackBar = inject(MatSnackBar);
 
   errors: any = {};
   loading = signal(true);
@@ -25,9 +33,40 @@ export class ArticleEdit {
     content: ['', Validators.required]
   });
 
+    existingAttachments = signal<Attachment[]>([]);
+  selectedFiles: File[] = [];
+
   constructor() {
     const id = this.route.snapshot.paramMap.get('id')!;
     this.load(id);
+
+      this.ws.onArticleUpdated()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(msg => {
+        if (msg.articleId === id) {
+          this.showSuccess(`Article updated: ${msg.message}`);
+          this.load(id);
+        }
+      });
+  }
+
+  ngOnDestroy() {
+  this.destroy$.next();
+  this.destroy$.complete();
+}
+
+  showSuccess(message: string) {
+    this.snackBar.open(message, 'Close', {
+      duration: 3000,
+      panelClass: ['success-snackbar']
+    });
+  }
+
+  showError(message: string) {
+    this.snackBar.open(message, 'Close', {
+      duration: 5000,
+      panelClass: ['error-snackbar']
+    });
   }
 
   load(id: string) {
@@ -37,6 +76,7 @@ export class ArticleEdit {
           title: article.title,
           content: article.content
         });
+        this.existingAttachments.set(article.attachments || []);
         this.loading.set(false);
       },
       error: () => {
@@ -45,16 +85,44 @@ export class ArticleEdit {
     });
   }
 
+    onFileSelected(event: any) {
+    this.selectedFiles = Array.from(event.target.files);
+  }
+
+    removeAttachment(filename: string) {
+    const id = this.route.snapshot.paramMap.get('id')!;
+    if (!confirm('Remove this attachment?')) return;
+
+    this.svc.deleteAttachment(id, filename).subscribe({
+      next: article => this.existingAttachments.set(article.attachments || []),
+      error: e => this.showError('Error: ' + e.message)
+    });
+  }
+
   save() {
     if (this.form.invalid) return;
 
     const id = this.route.snapshot.paramMap.get('id')!;
-    this.svc.update(id, this.form.value as any).subscribe({
-      next: () => this.router.navigate(['/article', id]),
+    const updateData = this.form.value as { title: string; content: string };
+
+    this.svc.update(id, updateData).subscribe({
+      next: () => {
+        if (this.selectedFiles.length > 0) {
+          this.svc.uploadAttachments(id, this.selectedFiles).subscribe({
+            next: () => {
+              this.showSuccess('Article and attachments saved successfully!');
+              this.router.navigate(['/article', id]);
+            },
+            error: err => this.uploadError.set(err.error?.error || 'Upload failed')
+          });
+        } else {
+          this.showSuccess('Article saved successfully!');
+          this.router.navigate(['/article', id]);
+        }
+      },
       error: e => {
         this.errors = {};
         const msg = e?.error?.error;
-
         if (typeof msg === 'string') {
           if (msg.toLowerCase().includes('title')) {
             this.errors.title = msg;
@@ -65,6 +133,7 @@ export class ArticleEdit {
             this.form.get('content')?.setErrors({ server: msg });
           }
         }
+        if (!msg) this.showError('Failed to save article');
       }
     });
   }

@@ -3,23 +3,38 @@
   <label>Title</label>
   <input formControlName="title" placeholder="Enter title" />
   @if (errors.title) {
-    <div class="error">
-      {{ errors.title }}
-    </div>
+    <div class="error">{{ errors.title }}</div>
   }
+
   <label>Content</label>
   <quill-editor formControlName="content"></quill-editor>
   @if (errors.content) {
-    <div class="error">
-      {{ errors.content }}
-    </div>
+    <div class="error">{{ errors.content }}</div>
   }
 
   <label>Attachments</label>
-  <input type="file" multiple (change)="onFileSelected($event)" accept=".jpg,.jpeg,.png,.pdf" />
+  <input
+    type="file"
+    multiple
+    (change)="onFileSelected($event)"
+    accept=".jpg,.jpeg,.png,.pdf"
+  />
+
+  @if (selectedFiles.length > 0) {
+    <p>Selected Files:</p>
+    <ul>
+      @for (f of selectedFiles; track f.name) {
+        <li>{{ f.name }}</li>
+      }
+    </ul>
+  }
+
+  @if (uploadError()) {
+    <div class="error">{{ uploadError() }}</div>
+  }
 
   <div class="form-buttons">
-  <button type="button" routerLink="/">Cancel</button>
-  <button type="submit" [disabled]="form.invalid">Save</button>
-</div>
+    <button type="button" routerLink="/">Cancel</button>
+    <button type="submit" [disabled]="form.invalid">Save</button>
+  </div>
 </form>

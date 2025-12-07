@@ -3,8 +3,8 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const articlesRouter = require('./controllers/articlesController');
 const http = require('http');
-const { Server } = require('socket.io');
 const path = require('path');
+const socket = require('./socket');
 
 const app = express();
 app.use(cors());
@@ -13,8 +13,8 @@ app.use(bodyParser.json({ limit: '5mb' }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 const server = http.createServer(app);
-const io = new Server(server, { cors: { origin: '*' } });
-app.set('io', io);
+
+const io = socket.init(server, { cors: { origin: '*' } });
 
 app.use('/api/articles', articlesRouter);
 
