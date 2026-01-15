@@ -1,9 +1,37 @@
 @if (loading()) {
   <p>Loading...</p>
-} @else if (error()) {
+}
+@else if (error()) {
   <p class="error">{{ error() }}</p>
-} @else if (article()) {
+}
+@else if (article()) {
+
   <button (click)="back()">⬅ Back</button>
+  <button class="edit-btn" (click)="edit()">✏ Edit</button>
+
   <h2>{{ article()!.title }}</h2>
+
+  @if (article()?.attachments?.length) {
+    <h3>Attachments</h3>
+
+    <div class="attachments">
+      @for (file of article()?.attachments; track file.filename) {
+        <div class="attachment-card" (click)="openFile(file.url!)">
+
+          @if (file.originalName.toLowerCase().endsWith('.jpg') ||
+              file.originalName.toLowerCase().endsWith('.png') ||
+              file.originalName.toLowerCase().endsWith('.jpeg')) {
+            <img class="preview" [src]="file.url" alt="preview" />
+          }
+          @else {
+            <div class="icon">📄</div>
+          }
+
+          <div class="name">{{ file.originalName }}</div>
+        </div>
+      }
+    </div>
+  }
+
   <div class="content" [innerHTML]="article()!.content"></div>
 }

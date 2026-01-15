@@ -1,0 +1,65 @@
+<h2>Edit Article</h2>
+
+@if (loading()) {
+  <p>Loading...</p>
+}
+@else {
+<form [formGroup]="form" (ngSubmit)="save()">
+
+  <label>Title</label>
+  <input formControlName="title" placeholder="Enter title" />
+  @if (errors.title) {
+    <div class="error">{{ errors.title }}</div>
+  }
+
+  <label>Content</label>
+  <quill-editor formControlName="content"></quill-editor>
+  @if (errors.content) {
+    <div class="error">{{ errors.content }}</div>
+  }
+
+  @if (existingAttachments().length > 0) {
+  <label>Existing Attachments:</label>
+
+  <div class="attachments">
+    @for (file of existingAttachments(); track file.filename) {
+      <div class="attachment-card">
+        @if (file.originalName.toLowerCase().endsWith('.jpg') ||
+            file.originalName.toLowerCase().endsWith('.jpeg') ||
+            file.originalName.toLowerCase().endsWith('.png')) {
+          <img class="preview" [src]="file.url" alt="preview" />
+        }
+        @else {
+          <div class="icon">📄</div>
+        }
+
+        <div class="name">{{ file.originalName }}</div>
+        <button type="button" class="delete-btn" (click)="removeAttachment(file.filename)">Delete</button>
+      </div>
+    }
+  </div>
+}
+
+<div>
+  <label>Add Files:</label>
+  <input type="file" multiple (change)="onFileSelected($event)" />
+  @if (selectedFiles.length > 0) {
+    <p>Selected Files:</p>
+    <ul>
+      @for (f of selectedFiles; track f.name) {
+        <li>{{ f.name }}</li>
+      }
+    </ul>
+  }
+
+  @if (uploadError()) {
+    <div class="error">{{ uploadError() }}</div>
+  }
+</div>
+
+  <div class="form-buttons">
+    <button type="button" (click)="cancel()">Cancel</button>
+    <button type="submit" [disabled]="form.invalid">Save</button>
+  </div>
+</form>
+}

@@ -9,9 +9,14 @@
 } @else {
   <ul class="list">
     @for (article of articles(); track article.id) {
-      <li (click)="open(article.id)">
-        <strong>{{ article.title }}</strong>
-        <span>{{ article.createdAt | date:'short' }}</span>
+      <li>
+        <div class="left" (click)="open(article.id)">
+          <strong>{{ article.title }}</strong>
+          <span>{{ article.createdAt | date:'short' }}</span>
+        </div>
+        <button class="delete" (click)="delete(article.id, $event)">
+          ❌
+        </button>
       </li>
     }
   </ul>
