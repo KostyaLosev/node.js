@@ -1,5 +1,14 @@
 <div class="toolbar">
   <button (click)="create()">➕ New Article</button>
+  <label class="workspace-filter">
+    Workspace:
+    <select (change)="switchWorkspace($any($event.target).value)">
+      <option value="">All workspaces</option>
+      @for (workspace of workspaces(); track workspace.id) {
+        <option [value]="workspace.id">{{ workspace.name }}</option>
+      }
+    </select>
+  </label>
 </div>
 
 @if (loading()) {
@@ -12,6 +21,9 @@
       <li>
         <div class="left" (click)="open(article.id)">
           <strong>{{ article.title }}</strong>
+          @if (article.workspace?.name) {
+            <span class="workspace">{{ article.workspace?.name }}</span>
+          }
           <span>{{ article.createdAt | date:'short' }}</span>
         </div>
         <button class="delete" (click)="delete(article.id, $event)">

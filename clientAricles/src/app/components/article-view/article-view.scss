@@ -27,7 +27,12 @@ h2 {
   font-weight: 600;
 }
 
-/* ======= ATTACHMENTS BLOCK ======= */
+.workspace {
+  margin-top: 0;
+  color: #3d5a80;
+  font-size: 14px;
+}
+
 
 h3 {
   margin-top: 20px;
@@ -97,4 +102,75 @@ h3 {
 .error {
   color: #d32f2f;
   text-align: center;
+}
+
+.comments {
+  margin-top: 32px;
+}
+
+.comment-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+
+  textarea {
+    min-height: 90px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    padding: 10px;
+    font-family: inherit;
+  }
+
+  button {
+    align-self: flex-start;
+    background: #1976d2;
+    color: #fff;
+    border-radius: 8px;
+    padding: 8px 14px;
+  }
+}
+
+.empty {
+  color: #777;
+}
+
+.comment-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+
+  li {
+    border: 1px solid #eee;
+    border-radius: 10px;
+    padding: 14px;
+    margin-bottom: 12px;
+    background: #fafafa;
+  }
+}
+
+.comment-content {
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+.comment-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: #666;
+}
+
+.comment-actions {
+  display: flex;
+  gap: 10px;
+
+  button {
+    color: #1976d2;
+  }
+
+  .danger {
+    color: #d32f2f;
+  }
 }

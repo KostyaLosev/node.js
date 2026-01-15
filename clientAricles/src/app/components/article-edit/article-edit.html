@@ -12,6 +12,17 @@
     <div class="error">{{ errors.title }}</div>
   }
 
+  <label>Workspace</label>
+  <select formControlName="workspaceId">
+    <option value="" disabled>Select workspace</option>
+    @for (workspace of workspaces(); track workspace.id) {
+      <option [value]="workspace.id">{{ workspace.name }}</option>
+    }
+  </select>
+  @if (errors.workspaceId) {
+    <div class="error">{{ errors.workspaceId }}</div>
+  }
+
   <label>Content</label>
   <quill-editor formControlName="content"></quill-editor>
   @if (errors.content) {

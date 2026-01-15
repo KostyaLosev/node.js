@@ -1,6 +1,6 @@
 import { Component, inject, signal, OnDestroy  } from '@angular/core';
 import { Router } from '@angular/router';
-import { ArticleService, Article } from '../../services/articlie.service';
+import { ArticleService, Article, Workspace } from '../../services/articlie.service';
 import { CommonModule } from '@angular/common';
 import { WebSocketService } from '../../services/web-socket.service';
 import { takeUntil } from 'rxjs/operators';
@@ -19,6 +19,8 @@ export class ArticlesList implements OnDestroy {
   private ws = inject(WebSocketService);
 
   articles = signal<Article[]>([]);
+  workspaces = signal<Workspace[]>([]);
+  selectedWorkspaceId = signal<number | null>(null);
   loading = signal(true);
   error = signal<string | null>(null);
 
@@ -26,6 +28,7 @@ export class ArticlesList implements OnDestroy {
 
 
   constructor() {
+    this.loadWorkspaces();
     this.load();
 
     this.ws.onArticleUpdated()
@@ -41,9 +44,20 @@ export class ArticlesList implements OnDestroy {
     this.destroy$.complete();
   }
 
+  loadWorkspaces() {
+    this.svc.listWorkspaces().subscribe({
+      next: list => {
+        this.workspaces.set(list);
+      },
+      error: e => {
+        this.error.set(e.message);
+      }
+    });
+  }
+
   load() {
     this.loading.set(true);
-    this.svc.list().subscribe({
+    this.svc.list(this.selectedWorkspaceId()).subscribe({
       next: list => {
         this.articles.set(list);
         this.loading.set(false);
@@ -55,7 +69,7 @@ export class ArticlesList implements OnDestroy {
     });
   }
 
-  open(id: string) {
+  open(id: number) {
     this.router.navigate(['/article', id]);
   }
 
@@ -63,7 +77,7 @@ export class ArticlesList implements OnDestroy {
     this.router.navigate(['/create']);
   }
 
-  delete(id: string, event: Event) {
+  delete(id: number, event: Event) {
     event.stopPropagation();
 
     if (!confirm('Delete this article?')) return;
@@ -72,5 +86,11 @@ export class ArticlesList implements OnDestroy {
       next: () => this.load(),
       error: e => alert('Error: ' + e.message)
     });
+  }
+
+  switchWorkspace(value: string) {
+    const selected = value ? Number(value) : null;
+    this.selectedWorkspaceId.set(Number.isFinite(selected) ? selected : null);
+    this.load();
   }
 }

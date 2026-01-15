@@ -1,106 +1,117 @@
-const fs = require('fs-extra');
-const path = require('path');
-const { v4: uuidv4 } = require('uuid');
+const { Article, Comment, Workspace } = require('../db');
 
-const DATA_DIR = path.join(__dirname, '..', 'data');
-
-async function ensureDataDir() {
-  await fs.ensureDir(DATA_DIR);
-}
-
-async function listArticles() {
-  await ensureDataDir();
-  const files = await fs.readdir(DATA_DIR);
-  const articles = [];
-  for (const f of files) {
-    if (!f.endsWith('.json')) continue;
-    const full = path.join(DATA_DIR, f);
-    try {
-      const txt = await fs.readFile(full, 'utf8');
-      const obj = JSON.parse(txt);
-      articles.push({
-        id: obj.id,
-        title: obj.title,
-        createdAt: obj.createdAt
-      });
-    } catch (e) {
-    }
+async function listArticles(workspaceId) {
+  const where = {};
+  if (workspaceId) {
+    where.workspaceId = workspaceId;
   }
-  articles.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-  return articles;
+
+  const articles = await Article.findAll({
+    where,
+    include: [{ model: Workspace, as: 'workspace', attributes: ['id', 'name'] }],
+    order: [['createdAt', 'DESC']],
+  });
+
+  return articles.map((article) => ({
+    id: article.id,
+    title: article.title,
+    createdAt: article.createdAt,
+    workspaceId: article.workspaceId,
+    workspace: article.workspace ? { id: article.workspace.id, name: article.workspace.name } : null,
+  }));
 }
 
 async function getArticleById(id) {
-  await ensureDataDir();
-  const file = path.join(DATA_DIR, `${id}.json`);
-  if (!await fs.pathExists(file)) return null;
-  const txt = await fs.readFile(file, 'utf8');
-  return JSON.parse(txt);
+  const article = await Article.findByPk(id, {
+    include: [
+      { model: Workspace, as: 'workspace', attributes: ['id', 'name'] },
+      { model: Comment, as: 'comments', attributes: ['id', 'content', 'createdAt', 'updatedAt'] },
+    ],
+    order: [[{ model: Comment, as: 'comments' }, 'createdAt', 'ASC']],
+  });
+
+  return article ? article.get({ plain: true }) : null;
 }
 
-async function createArticle({ title, content }) {
-  await ensureDataDir();
-  const id = uuidv4();
-  const createdAt = new Date().toISOString();
-  const article = { id, title, content, createdAt };
-  const file = path.join(DATA_DIR, `${id}.json`);
-  await fs.writeFile(file, JSON.stringify(article, null, 2), 'utf8');
-  return article;
+async function createArticle({ title, content, workspaceId }) {
+  const article = await Article.create({
+    title,
+    content,
+    workspaceId,
+    attachments: [],
+  });
+
+  return article.get({ plain: true });
 }
 
-async function updateArticle(id, { title, content }) {
-  await ensureDataDir();
-  const file = path.join(DATA_DIR, `${id}.json`);
-  if (!await fs.pathExists(file)) return null;
+async function updateArticle(id, { title, content, workspaceId }) {
+  const article = await Article.findByPk(id);
+  if (!article) return null;
 
-  const article = JSON.parse(await fs.readFile(file, 'utf8'));
   article.title = title;
   article.content = content;
-  article.updatedAt = new Date().toISOString();
+  if (workspaceId) {
+    article.workspaceId = workspaceId;
+  }
 
-  await fs.writeFile(file, JSON.stringify(article, null, 2), 'utf8');
-  return article;
+  await article.save();
+  return article.get({ plain: true });
 }
 
 async function deleteArticle(id) {
-  await ensureDataDir();
-  const file = path.join(DATA_DIR, `${id}.json`);
-  if (!await fs.pathExists(file)) return null;
-
-  await fs.remove(file);
-  return true;
+  const deleted = await Article.destroy({ where: { id } });
+  return deleted > 0;
 }
 
 async function addAttachments(id, newFiles) {
-  const article = await getArticleById(id);
+  const article = await Article.findByPk(id);
   if (!article) return null;
 
-  article.attachments = article.attachments || [];
-  article.attachments.push(...newFiles);
-
-  const file = path.join(DATA_DIR, `${id}.json`);
-  await fs.writeFile(file, JSON.stringify(article, null, 2), 'utf8');
-  return article;
+  const existing = Array.isArray(article.attachments) ? article.attachments : [];
+  article.attachments = [...existing, ...newFiles];
+  await article.save();
+  return article.get({ plain: true });
 }
 
 async function removeAttachment(articleId, filename) {
-    const article = await getArticleById(articleId);
-    if (!article || !article.attachments) return null;
+  const article = await Article.findByPk(articleId);
+  if (!article || !article.attachments) return null;
 
-    const index = article.attachments.findIndex(att => att.filename === filename);
-    if (index === -1) return article;
+  const attachments = Array.isArray(article.attachments) ? article.attachments : [];
+  const index = attachments.findIndex(att => att.filename === filename);
+  if (index === -1) return article.get({ plain: true });
 
-    const filePath = path.join(__dirname, '..', 'uploads', article.attachments[index].filename);
-    if (await fs.pathExists(filePath)) {
-        await fs.remove(filePath);
-    }
+  attachments.splice(index, 1);
+  article.attachments = attachments;
+  await article.save();
 
-    article.attachments.splice(index, 1);
+  return article.get({ plain: true });
+}
 
-    const file = path.join(DATA_DIR, `${articleId}.json`);
-    await fs.writeFile(file, JSON.stringify(article, null, 2), 'utf8');
+async function listComments(articleId) {
+  return Comment.findAll({
+    where: { articleId },
+    order: [['createdAt', 'ASC']],
+  });
+}
 
-    return article;
+async function addComment(articleId, content) {
+  const comment = await Comment.create({ articleId, content });
+  return comment.get({ plain: true });
+}
+
+async function updateComment(articleId, commentId, content) {
+  const comment = await Comment.findOne({ where: { id: commentId, articleId } });
+  if (!comment) return null;
+
+  comment.content = content;
+  await comment.save();
+  return comment.get({ plain: true });
+}
+
+async function deleteComment(articleId, commentId) {
+  const deleted = await Comment.destroy({ where: { id: commentId, articleId } });
+  return deleted > 0;
 }
 
 
@@ -111,5 +122,9 @@ module.exports = {
   updateArticle,
   deleteArticle,
   addAttachments,
-  removeAttachment
+  removeAttachment,
+  listComments,
+  addComment,
+  updateComment,
+  deleteComment,
 };

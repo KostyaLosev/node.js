@@ -1,6 +1,6 @@
 import { Component, inject, signal, OnDestroy  } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { ArticleService, Attachment } from '../../services/articlie.service';
+import { ArticleService, Attachment, Workspace } from '../../services/articlie.service';
 import { FormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { QuillModule } from 'ngx-quill';
@@ -24,26 +24,29 @@ export class ArticleEdit implements OnDestroy {
   uploadError = signal<string | null>(null);
   private destroy$ = new Subject<void>();
   private snackBar = inject(MatSnackBar);
+  workspaces = signal<Workspace[]>([]);
 
   errors: any = {};
   loading = signal(true);
 
   form = this.fb.group({
     title: ['', Validators.required],
-    content: ['', Validators.required]
+    content: ['', Validators.required],
+    workspaceId: ['', Validators.required]
   });
 
     existingAttachments = signal<Attachment[]>([]);
   selectedFiles: File[] = [];
 
   constructor() {
-    const id = this.route.snapshot.paramMap.get('id')!;
+    const id = Number(this.route.snapshot.paramMap.get('id')!);
+    this.loadWorkspaces();
     this.load(id);
 
       this.ws.onArticleUpdated()
       .pipe(takeUntil(this.destroy$))
       .subscribe(msg => {
-        if (msg.articleId === id) {
+        if (Number(msg.articleId) === id) {
           this.showSuccess(`Article updated: ${msg.message}`);
           this.load(id);
         }
@@ -69,12 +72,13 @@ export class ArticleEdit implements OnDestroy {
     });
   }
 
-  load(id: string) {
+  load(id: number) {
     this.svc.get(id).subscribe({
       next: article => {
         this.form.patchValue({
           title: article.title,
-          content: article.content
+          content: article.content,
+          workspaceId: String(article.workspaceId)
         });
         this.existingAttachments.set(article.attachments || []);
         this.loading.set(false);
@@ -90,7 +94,7 @@ export class ArticleEdit implements OnDestroy {
   }
 
     removeAttachment(filename: string) {
-    const id = this.route.snapshot.paramMap.get('id')!;
+    const id = Number(this.route.snapshot.paramMap.get('id')!);
     if (!confirm('Remove this attachment?')) return;
 
     this.svc.deleteAttachment(id, filename).subscribe({
@@ -102,8 +106,9 @@ export class ArticleEdit implements OnDestroy {
   save() {
     if (this.form.invalid) return;
 
-    const id = this.route.snapshot.paramMap.get('id')!;
-    const updateData = this.form.value as { title: string; content: string };
+    const id = Number(this.route.snapshot.paramMap.get('id')!);
+    const { title, content, workspaceId } = this.form.value as { title: string; content: string; workspaceId: string };
+    const updateData = { title, content, workspaceId: Number(workspaceId) };
 
     this.svc.update(id, updateData).subscribe({
       next: () => {
@@ -128,6 +133,10 @@ export class ArticleEdit implements OnDestroy {
             this.errors.title = msg;
             this.form.get('title')?.setErrors({ server: msg });
           }
+          if (msg.toLowerCase().includes('workspace')) {
+            this.errors.workspaceId = msg;
+            this.form.get('workspaceId')?.setErrors({ server: msg });
+          }
           if (msg.toLowerCase().includes('content')) {
             this.errors.content = msg;
             this.form.get('content')?.setErrors({ server: msg });
@@ -139,7 +148,21 @@ export class ArticleEdit implements OnDestroy {
   }
 
   cancel() {
-    const id = this.route.snapshot.paramMap.get('id')!;
+    const id = Number(this.route.snapshot.paramMap.get('id')!);
     this.router.navigate(['/article', id]);
+  }
+
+  loadWorkspaces() {
+    this.svc.listWorkspaces().subscribe({
+      next: list => {
+        this.workspaces.set(list);
+        if (list.length > 0 && !this.form.value.workspaceId) {
+          this.form.patchValue({ workspaceId: String(list[0].id) });
+        }
+      },
+      error: err => {
+        this.showError(err.message);
+      }
+    });
   }
 }

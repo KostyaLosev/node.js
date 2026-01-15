@@ -16,6 +16,17 @@ async function addFiles(articleId, files) {
 }
 
 async function removeFile(articleId, filename) {
+  const article = await articlesService.getArticleById(articleId);
+  if (!article || !article.attachments) return null;
+
+  const attachment = article.attachments.find(att => att.filename === filename);
+  if (!attachment) return article;
+
+  const filePath = path.join(__dirname, '..', 'uploads', attachment.filename);
+  if (await fs.pathExists(filePath)) {
+    await fs.remove(filePath);
+  }
+
   return articlesService.removeAttachment(articleId, filename);
 }
 

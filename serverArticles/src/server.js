@@ -4,6 +4,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const articlesRouter = require('./controllers/articlesController');
+const workspacesRouter = require('./controllers/workspacesController');
 const http = require('http');
 const path = require('path');
 const socket = require('./socket');
@@ -20,6 +21,7 @@ const server = http.createServer(app);
 const io = socket.init(server, { cors: { origin: '*' } });
 
 app.use('/api/articles', articlesRouter);
+app.use('/api/workspaces', workspacesRouter);
 
 app.get('/health', (req, res) => res.json({ ok: true }));
 
