@@ -50,8 +50,13 @@ form {
     }
   }
 
-  button {
-    align-self: flex-end;
+  .form-buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 16px;
+  }
+
+  .form-buttons button {
     background: #1976d2;
     color: #fff;
     border: none;
@@ -60,14 +65,21 @@ form {
     font-size: 14px;
     cursor: pointer;
     transition: background 0.2s ease;
-
-    &:hover {
-      background: #1565c0;
-    }
-
-    &:disabled {
-      background: #ccc;
-      cursor: not-allowed;
-    }
+    align-self: auto;
   }
+
+  .form-buttons button:hover {
+    background: #1565c0;
+  }
+
+  .form-buttons button:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+  }
+}
+
+.error {
+  color: red;
+  font-size: 12px;
+  margin-top: 4px;
 }

@@ -48,8 +48,33 @@ async function createArticle({ title, content }) {
   return article;
 }
 
+async function updateArticle(id, { title, content }) {
+  await ensureDataDir();
+  const file = path.join(DATA_DIR, `${id}.json`);
+  if (!await fs.pathExists(file)) return null;
+
+  const article = JSON.parse(await fs.readFile(file, 'utf8'));
+  article.title = title;
+  article.content = content;
+  article.updatedAt = new Date().toISOString();
+
+  await fs.writeFile(file, JSON.stringify(article, null, 2), 'utf8');
+  return article;
+}
+
+async function deleteArticle(id) {
+  await ensureDataDir();
+  const file = path.join(DATA_DIR, `${id}.json`);
+  if (!await fs.pathExists(file)) return null;
+
+  await fs.remove(file);
+  return true;
+}
+
 module.exports = {
   listArticles,
   getArticleById,
   createArticle,
+  updateArticle,
+  deleteArticle
 };
