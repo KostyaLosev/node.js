@@ -1,0 +1,11 @@
+<h2>Create New Article</h2>
+
+<form [formGroup]="form" (ngSubmit)="save()">
+  <label>Title</label>
+  <input formControlName="title" placeholder="Enter title" />
+
+  <label>Content</label>
+  <quill-editor formControlName="content"></quill-editor>
+
+  <button type="submit" [disabled]="form.invalid">Save</button>
+</form>

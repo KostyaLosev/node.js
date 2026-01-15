@@ -1,0 +1,51 @@
+:host {
+  display: block;
+  max-width: 800px;
+  margin: 40px auto;
+  padding: 0 16px;
+  font-family: system-ui, sans-serif;
+  color: #222;
+}
+
+button {
+  background: none;
+  border: none;
+  color: #1976d2;
+  cursor: pointer;
+  font-size: 14px;
+  margin-bottom: 16px;
+  padding: 6px 0;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+h2 {
+  margin-bottom: 12px;
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.content {
+  background: #fff;
+  border-radius: 10px;
+  padding: 20px;
+  line-height: 1.6;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+
+  p {
+    margin-bottom: 12px;
+  }
+
+  img {
+    max-width: 100%;
+    border-radius: 8px;
+    margin: 12px 0;
+  }
+}
+
+.error {
+  color: #d32f2f;
+  text-align: center;
+}

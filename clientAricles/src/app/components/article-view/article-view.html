@@ -1,0 +1,9 @@
+@if (loading()) {
+  <p>Loading...</p>
+} @else if (error()) {
+  <p class="error">{{ error() }}</p>
+} @else if (article()) {
+  <button (click)="back()">⬅ Back</button>
+  <h2>{{ article()!.title }}</h2>
+  <div class="content" [innerHTML]="article()!.content"></div>
+}

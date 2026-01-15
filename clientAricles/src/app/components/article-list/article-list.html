@@ -1,0 +1,18 @@
+<div class="toolbar">
+  <button (click)="create()">➕ New Article</button>
+</div>
+
+@if (loading()) {
+  <p>Loading...</p>
+} @else if (error()) {
+  <p class="error">{{ error() }}</p>
+} @else {
+  <ul class="list">
+    @for (article of articles(); track article.id) {
+      <li (click)="open(article.id)">
+        <strong>{{ article.title }}</strong>
+        <span>{{ article.createdAt | date:'short' }}</span>
+      </li>
+    }
+  </ul>
+}
