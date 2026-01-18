@@ -26,10 +26,20 @@ export interface Article {
   title: string;
   content: string;
   createdAt: string;
+  updatedAt?: string;
   workspaceId: number;
   workspace?: Workspace | null;
   attachments?: Attachment[];
   comments?: Comment[];
+  version?: number;
+  currentVersion?: number;
+  isLatest?: boolean;
+}
+
+export interface ArticleVersion {
+  version: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -52,8 +62,12 @@ export class ArticleService {
     return this.http.get<Workspace[]>(this.workspacesBase);
   }
 
-  get(id: number): Observable<Article> {
-    return this.http.get<Article>(`${this.base}/${id}`).pipe(
+  get(id: number, version?: number | null): Observable<Article> {
+    let params = new HttpParams();
+    if (version) {
+      params = params.set('version', String(version));
+    }
+    return this.http.get<Article>(`${this.base}/${id}`, { params }).pipe(
       map(article => {
         if (article.attachments) {
           article.attachments = article.attachments.map(f => ({
@@ -64,6 +78,10 @@ export class ArticleService {
         return article;
       })
     );
+  }
+
+  listVersions(id: number): Observable<ArticleVersion[]> {
+    return this.http.get<ArticleVersion[]>(`${this.base}/${id}/versions`);
   }
 
   create(data: { title: string; content: string; workspaceId: number }): Observable<Article> {

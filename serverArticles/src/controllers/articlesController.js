@@ -51,9 +51,30 @@ router.get('/', async (req, res) => {
   }
 });
 
+router.get('/:id/versions', async (req, res) => {
+  try {
+    const versions = await articlesService.listArticleVersions(req.params.id);
+    if (!versions) return res.status(404).json({ error: 'Article not found' });
+    res.json(versions);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to load article versions' });
+  }
+});
+
 router.get('/:id', async (req, res) => {
   try {
-    const article = await articlesService.getArticleById(req.params.id);
+    const versionParam = req.query.version;
+    let version = null;
+    if (versionParam !== undefined) {
+      const parsed = Number(versionParam);
+      if (!Number.isInteger(parsed) || parsed <= 0) {
+        return res.status(400).json({ error: 'Invalid version' });
+      }
+      version = parsed;
+    }
+
+    const article = await articlesService.getArticleById(req.params.id, version);
     if (!article) return res.status(404).json({ error: 'Article not found' });
     res.json(article);
   } catch (err) {
