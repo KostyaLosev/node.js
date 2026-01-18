@@ -1,0 +1,29 @@
+<section class="auth-card">
+  <h2>Login</h2>
+  <p class="subtitle">Use your account to access the logic area.</p>
+
+  <form (ngSubmit)="submit()" class="auth-form">
+    <label>
+      Email
+      <input type="email" name="email" [(ngModel)]="email" required />
+    </label>
+
+    <label>
+      Password
+      <input type="password" name="password" [(ngModel)]="password" minlength="8" required />
+    </label>
+
+    @if (error()) {
+      <p class="error">{{ error() }}</p>
+    }
+
+    <button type="submit" [disabled]="loading()">
+      {{ loading() ? 'Signing in...' : 'Login' }}
+    </button>
+  </form>
+
+  <p class="switch">
+    No account yet?
+    <a routerLink="/register">Register here</a>
+  </p>
+</section>
