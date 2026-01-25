@@ -11,6 +11,11 @@ function isValidString(value) {
   return typeof value === 'string' && value.trim().length > 0;
 }
 
+function parseWorkspaceId(value) {
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+}
+
 const UPLOAD_DIR = path.join(__dirname, '..', 'uploads');
 fs.ensureDirSync(UPLOAD_DIR);
 
@@ -37,7 +42,8 @@ const upload = multer({ storage, fileFilter });
 
 router.get('/', async (req, res) => {
   try {
-    const list = await articlesService.listArticles();
+    const workspaceId = parseWorkspaceId(req.query.workspaceId);
+    const list = await articlesService.listArticles(workspaceId);
     res.json(list);
   } catch (err) {
     console.error(err);
@@ -58,11 +64,13 @@ router.get('/:id', async (req, res) => {
 
 router.post('/', async (req, res) => {
   try {
-    const { title, content } = req.body || {};
+    const { title, content, workspaceId } = req.body || {};
     if (!isValidString(title)) return res.status(400).json({ error: 'Title is required' });
     if (!isValidString(content)) return res.status(400).json({ error: 'Content is required' });
+    const parsedWorkspaceId = parseWorkspaceId(workspaceId);
+    if (!parsedWorkspaceId) return res.status(400).json({ error: 'Workspace is required' });
 
-    const created = await articlesService.createArticle({ title: title.trim(), content });
+    const created = await articlesService.createArticle({ title: title.trim(), content, workspaceId: parsedWorkspaceId });
 
     notifications.notifyArticleUpdate({
       articleId: created.id,
@@ -79,11 +87,13 @@ router.post('/', async (req, res) => {
 
 router.put('/:id', async (req, res) => {
   try {
-    const { title, content } = req.body || {};
+    const { title, content, workspaceId } = req.body || {};
     if (!isValidString(title)) return res.status(400).json({ error: 'Title is required' });
     if (!isValidString(content)) return res.status(400).json({ error: 'Content is required' });
+    const parsedWorkspaceId = parseWorkspaceId(workspaceId);
+    if (!parsedWorkspaceId) return res.status(400).json({ error: 'Workspace is required' });
 
-    const updated = await articlesService.updateArticle(req.params.id, { title: title.trim(), content });
+    const updated = await articlesService.updateArticle(req.params.id, { title: title.trim(), content, workspaceId: parsedWorkspaceId });
     if (!updated) return res.status(404).json({ error: 'Article not found' });
 
     notifications.notifyArticleUpdate({
@@ -114,6 +124,75 @@ router.delete('/:id', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to delete article' });
+  }
+});
+
+router.get('/:id/comments', async (req, res) => {
+  try {
+    const comments = await articlesService.listComments(req.params.id);
+    res.json(comments);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to load comments' });
+  }
+});
+
+router.post('/:id/comments', async (req, res) => {
+  try {
+    const { content } = req.body || {};
+    if (!isValidString(content)) return res.status(400).json({ error: 'Content is required' });
+
+    const comment = await articlesService.addComment(req.params.id, content.trim());
+
+    notifications.notifyArticleUpdate({
+      articleId: req.params.id,
+      type: 'comment-created',
+      message: 'New comment added'
+    });
+
+    res.status(201).json(comment);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to add comment' });
+  }
+});
+
+router.put('/:id/comments/:commentId', async (req, res) => {
+  try {
+    const { content } = req.body || {};
+    if (!isValidString(content)) return res.status(400).json({ error: 'Content is required' });
+
+    const updated = await articlesService.updateComment(req.params.id, req.params.commentId, content.trim());
+    if (!updated) return res.status(404).json({ error: 'Comment not found' });
+
+    notifications.notifyArticleUpdate({
+      articleId: req.params.id,
+      type: 'comment-updated',
+      message: 'Comment updated'
+    });
+
+    res.json(updated);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to update comment' });
+  }
+});
+
+router.delete('/:id/comments/:commentId', async (req, res) => {
+  try {
+    const deleted = await articlesService.deleteComment(req.params.id, req.params.commentId);
+    if (!deleted) return res.status(404).json({ error: 'Comment not found' });
+
+    notifications.notifyArticleUpdate({
+      articleId: req.params.id,
+      type: 'comment-deleted',
+      message: 'Comment deleted'
+    });
+
+    res.json({ ok: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to delete comment' });
   }
 });
 

@@ -1,32 +1,23 @@
 module.exports = (sequelize, DataTypes) => {
   return sequelize.define(
-    'Article',
+    'Comment',
     {
       id: {
         type: DataTypes.INTEGER,
         primaryKey: true,
         autoIncrement: true,
       },
-      title: {
-        type: DataTypes.STRING,
+      articleId: {
+        type: DataTypes.INTEGER,
         allowNull: false,
       },
       content: {
         type: DataTypes.TEXT,
         allowNull: false,
       },
-      workspaceId: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-      },
-      attachments: {
-        type: DataTypes.JSONB,
-        allowNull: false,
-        defaultValue: [],
-      },
     },
     {
-      tableName: 'articles',
+      tableName: 'comments',
     }
   );
 };

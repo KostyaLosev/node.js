@@ -1,6 +1,6 @@
 import { Component, inject, signal  } from '@angular/core';
 import { Router } from '@angular/router';
-import { ArticleService } from '../../services/articlie.service';
+import { ArticleService, Workspace } from '../../services/articlie.service';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { QuillModule } from 'ngx-quill';
 import { CommonModule } from '@angular/common';
@@ -20,13 +20,15 @@ export class ArticleCreate {
   private fb = inject(FormBuilder);
   private snackBar = inject(MatSnackBar);
   uploadError = signal<string | null>(null);
+  workspaces = signal<Workspace[]>([]);
 
   errors: any = {};
   selectedFiles: File[] = [];
 
   form = this.fb.group({
     title: ['', Validators.required],
-    content: ['', Validators.required]
+    content: ['', Validators.required],
+    workspaceId: ['', Validators.required]
   });
 
   showSuccess(message: string) {
@@ -44,10 +46,30 @@ export class ArticleCreate {
   }
 
 
+  constructor() {
+    this.loadWorkspaces();
+  }
+
+  loadWorkspaces() {
+    this.svc.listWorkspaces().subscribe({
+      next: list => {
+        this.workspaces.set(list);
+        if (list.length > 0 && !this.form.value.workspaceId) {
+          this.form.patchValue({ workspaceId: String(list[0].id) });
+        }
+      },
+      error: err => {
+        this.showError(err.message);
+      }
+    });
+  }
+
     save() {
     if (this.form.invalid) return;
+    const { title, content, workspaceId } = this.form.value as { title: string; content: string; workspaceId: string };
+    const payload = { title, content, workspaceId: Number(workspaceId) };
 
-    this.svc.create(this.form.value as any).subscribe({
+    this.svc.create(payload).subscribe({
       next: (article) => {
         if (this.selectedFiles.length > 0) {
           this.svc.uploadAttachments(article.id, this.selectedFiles).subscribe({
@@ -73,6 +95,10 @@ export class ArticleCreate {
           if (msg.toLowerCase().includes('title')) {
             this.errors.title = msg;
             this.form.get('title')?.setErrors({ server: msg });
+          }
+          if (msg.toLowerCase().includes('workspace')) {
+            this.errors.workspaceId = msg;
+            this.form.get('workspaceId')?.setErrors({ server: msg });
           }
           if (msg.toLowerCase().includes('content')) {
             this.errors.content = msg;

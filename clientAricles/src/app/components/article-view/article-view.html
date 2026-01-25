@@ -10,6 +10,9 @@
   <button class="edit-btn" (click)="edit()">✏ Edit</button>
 
   <h2>{{ article()!.title }}</h2>
+  @if (article()?.workspace?.name) {
+    <p class="workspace">Workspace: {{ article()?.workspace?.name }}</p>
+  }
 
   @if (article()?.attachments?.length) {
     <h3>Attachments</h3>
@@ -34,4 +37,31 @@
   }
 
   <div class="content" [innerHTML]="article()!.content"></div>
+
+  <section class="comments">
+    <h3>Comments</h3>
+    <div class="comment-form">
+      <textarea [(ngModel)]="newComment" placeholder="Write a comment..."></textarea>
+      <button (click)="addComment()">Add Comment</button>
+    </div>
+
+    @if (comments().length === 0) {
+      <p class="empty">No comments yet.</p>
+    } @else {
+      <ul class="comment-list">
+        @for (comment of comments(); track comment.id) {
+          <li>
+            <div class="comment-content">{{ comment.content }}</div>
+            <div class="comment-meta">
+              <span>{{ comment.createdAt | date:'short' }}</span>
+              <div class="comment-actions">
+                <button (click)="editComment(comment)">Edit</button>
+                <button class="danger" (click)="deleteComment(comment)">Delete</button>
+              </div>
+            </div>
+          </li>
+        }
+      </ul>
+    }
+  </section>
 }
