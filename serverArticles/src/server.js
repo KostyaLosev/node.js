@@ -5,6 +5,8 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const articlesRouter = require('./controllers/articlesController');
 const workspacesRouter = require('./controllers/workspacesController');
+const authRouter = require('./controllers/authController');
+const authenticateToken = require('./middleware/authMiddleware');
 const http = require('http');
 const path = require('path');
 const socket = require('./socket');
@@ -20,8 +22,9 @@ const server = http.createServer(app);
 
 const io = socket.init(server, { cors: { origin: '*' } });
 
-app.use('/api/articles', articlesRouter);
-app.use('/api/workspaces', workspacesRouter);
+app.use('/api/auth', authRouter);
+app.use('/api/articles', authenticateToken, articlesRouter);
+app.use('/api/workspaces', authenticateToken, workspacesRouter);
 
 app.get('/health', (req, res) => res.json({ ok: true }));
 
