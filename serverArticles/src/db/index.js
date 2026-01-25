@@ -8,6 +8,7 @@ const Article = require('./models/article')(sequelize, DataTypes);
 const ArticleVersion = require('./models/articleVersion')(sequelize, DataTypes);
 const Comment = require('./models/comment')(sequelize, DataTypes);
 const Workspace = require('./models/workspace')(sequelize, DataTypes);
+const User = require('./models/user')(sequelize, DataTypes);
 
 Workspace.hasMany(Article, { foreignKey: 'workspaceId', as: 'articles' });
 Article.belongsTo(Workspace, { foreignKey: 'workspaceId', as: 'workspace' });
@@ -27,4 +28,5 @@ module.exports = {
   ArticleVersion,
   Comment,
   Workspace,
+  User,
 };

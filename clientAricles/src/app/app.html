@@ -1,4 +1,15 @@
     <main class="app-container">
-      <h1>📰 Articles App</h1>
+      <header class="app-header">
+        <div class="title">📰 Articles App</div>
+        <nav class="nav-links">
+          <a routerLink="/logic">List</a>
+          @if (!auth.isAuthenticated()) {
+            <a routerLink="/login">Login</a>
+            <a routerLink="/register">Register</a>
+          } @else {
+            <button class="logout" type="button" (click)="auth.logout()">Logout</button>
+          }
+        </nav>
+      </header>
       <router-outlet />
     </main>

@@ -1,0 +1,39 @@
+.app-container {
+  min-height: 100vh;
+  background: #f4f5fb;
+  padding: 2rem 1.5rem 3rem;
+  font-family: 'Inter', sans-serif;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.title {
+  font-size: 1.6rem;
+  font-weight: 700;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+
+  a {
+    text-decoration: none;
+    color: #2c2c3a;
+    font-weight: 600;
+  }
+}
+
+.logout {
+  border: none;
+  background: #d53a3a;
+  color: #fff;
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  cursor: pointer;
+}
