@@ -7,7 +7,29 @@
 @else if (article()) {
 
   <button (click)="back()">⬅ Back</button>
-  <button class="edit-btn" (click)="edit()">✏ Edit</button>
+  <button class="edit-btn" (click)="edit()" [disabled]="isOldVersion()">✏ Edit</button>
+
+  @if (isOldVersion()) {
+    <div class="version-banner">
+      Viewing version {{ article()?.version }} of {{ article()?.currentVersion }}. Editing is disabled.
+    </div>
+  }
+
+  @if (versions().length) {
+    <div class="version-picker">
+      <label for="versionSelect">Version</label>
+       <select id="versionSelect" [(ngModel)]="versionSelectValue" (ngModelChange)="changeVersion($event)">
+        <option value="">Latest (v{{ article()?.currentVersion }})</option>
+        @for (version of versions(); track version.version) {
+          @if (version.version !== article()?.currentVersion) {
+            <option [value]="version.version">
+              v{{ version.version }} — {{ version.createdAt | date:'short' }}
+            </option>
+          }
+        }
+      </select>
+    </div>
+  }
 
   <h2>{{ article()!.title }}</h2>
   @if (article()?.workspace?.name) {

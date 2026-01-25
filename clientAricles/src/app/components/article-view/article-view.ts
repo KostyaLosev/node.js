@@ -1,11 +1,11 @@
 import { Component, inject, signal, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { ArticleService, Article, Comment } from '../../services/articlie.service';
+import { ArticleService, Article, Comment, ArticleVersion } from '../../services/articlie.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { WebSocketService } from '../../services/web-socket.service';
 import { takeUntil } from 'rxjs/operators';
-import { Subject } from 'rxjs';
+import { combineLatest, Subject } from 'rxjs';
 
 interface ArticleUpdateMessage {
   articleId: string;
@@ -28,22 +28,38 @@ export class ArticleView implements OnDestroy {
 
   article = signal<Article | null>(null);
   comments = signal<Comment[]>([]);
+  versions = signal<ArticleVersion[]>([]);
+  selectedVersion = signal<number | null>(null);
+  versionSelectValue = '';
+  currentArticleId: number | null = null;
   loading = signal(true);
   error = signal<string | null>(null);
   newComment = '';
 
   constructor() {
-    const id = Number(this.route.snapshot.paramMap.get('id')!);
-    this.loadArticle(id);
+    combineLatest([this.route.paramMap, this.route.queryParamMap])
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(([params, query]) => {
+        const id = Number(params.get('id'));
+        this.currentArticleId = id;
+        const versionParam = query.get('version');
+        const parsedVersion = versionParam ? Number(versionParam) : null;
+        const version = parsedVersion !== null && Number.isInteger(parsedVersion) && parsedVersion > 0 ? parsedVersion : null;
+        this.selectedVersion.set(version);
+        this.versionSelectValue = version !== null ? String(version) : '';
+        this.loadArticle(id, this.selectedVersion());
+        this.loadVersions(id);
+      });
 
-  this.ws.onArticleUpdated()
-    .pipe(takeUntil(this.destroy$))
-    .subscribe((msg: ArticleUpdateMessage) => {
-      if (Number(msg.articleId) === id) {
-        alert(`Article updated: ${msg.message}`);
-        this.loadArticle(id);
-      }
-    });
+    this.ws.onArticleUpdated()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((msg: ArticleUpdateMessage) => {
+        if (this.currentArticleId && Number(msg.articleId) === this.currentArticleId) {
+          alert(`Article updated: ${msg.message}`);
+          this.loadVersions(this.currentArticleId);
+          this.loadArticle(this.currentArticleId, this.selectedVersion());
+        }
+      });
   }
 
   ngOnDestroy() {
@@ -51,9 +67,9 @@ export class ArticleView implements OnDestroy {
   this.destroy$.complete();
 }
 
-  loadArticle(id: number) {
+  loadArticle(id: number, version?: number | null) {
     this.loading.set(true);
-    this.svc.get(id).subscribe({
+    this.svc.get(id, version).subscribe({
       next: (art: Article) => {
         this.article.set(art);
         this.comments.set(art.comments || []);
@@ -63,6 +79,13 @@ export class ArticleView implements OnDestroy {
         this.error.set(e.message);
         this.loading.set(false);
       }
+    });
+  }
+
+  loadVersions(id: number) {
+    this.svc.listVersions(id).subscribe({
+      next: list => this.versions.set(list),
+      error: () => this.versions.set([]),
     });
   }
 
@@ -78,6 +101,20 @@ edit() {
   const id = Number(this.route.snapshot.paramMap.get('id')!);
   this.router.navigate(['/article', id, 'edit']);
 }
+
+isOldVersion(): boolean {
+  const article = this.article();
+  if (!article || !article.version || !article.currentVersion) return false;
+  return article.version < article.currentVersion;
+}
+
+  changeVersion(value: string) {
+    this.versionSelectValue = value;
+    const id = Number(this.route.snapshot.paramMap.get('id')!);
+    const parsed = value ? Number(value) : null;
+    const version = parsed !== null && Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+    this.router.navigate(['/article', id], { queryParams: version ? { version } : {} });
+  }
 
  addComment() {
    const content = this.newComment.trim();

@@ -1,11 +1,19 @@
 module.exports = (sequelize, DataTypes) => {
   return sequelize.define(
-    'Article',
+    'ArticleVersion',
     {
       id: {
         type: DataTypes.INTEGER,
         primaryKey: true,
         autoIncrement: true,
+      },
+      articleId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+      },
+      version: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
       },
       title: {
         type: DataTypes.STRING,
@@ -24,14 +32,9 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         defaultValue: [],
       },
-      currentVersion: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        defaultValue: 1,
-      },
     },
     {
-      tableName: 'articles',
+      tableName: 'article_versions',
     }
   );
 };

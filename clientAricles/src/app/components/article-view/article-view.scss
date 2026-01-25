@@ -19,6 +19,12 @@ button {
   &:hover {
     text-decoration: underline;
   }
+
+  &:disabled {
+    color: #9aa0a6;
+    cursor: not-allowed;
+    text-decoration: none;
+  }
 }
 
 h2 {
@@ -33,6 +39,30 @@ h2 {
   font-size: 14px;
 }
 
+.version-banner {
+  background: #fff4e5;
+  border: 1px solid #ffcc80;
+  color: #a15c00;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin: 12px 0;
+  font-size: 13px;
+}
+
+.version-picker {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+
+  select {
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    padding: 6px 10px;
+  }
+}
+
+/* ======= ATTACHMENTS BLOCK ======= */
 
 h3 {
   margin-top: 20px;
