@@ -23,6 +23,7 @@ export interface Comment {
 
 export interface Article {
   id: number;
+  userId?: number | null;
   title: string;
   content: string;
   createdAt: string;

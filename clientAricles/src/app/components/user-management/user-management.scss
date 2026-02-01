@@ -1,0 +1,31 @@
+.user-management {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.user-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 16px;
+}
+
+.user-table th,
+.user-table td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #e2e2e2;
+}
+
+.user-table select {
+  padding: 6px 8px;
+}
+
+.status {
+  font-size: 0.85rem;
+  color: #5a5a5a;
+}
+
+.error {
+  color: #b00020;
+}

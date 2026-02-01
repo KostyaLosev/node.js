@@ -5,7 +5,7 @@ import { Observable, tap } from 'rxjs';
 
 interface AuthResponse {
   token: string;
-  user: { id: number; email: string };
+  user: { id: number; email: string; role: 'admin' | 'user' };
 }
 
 @Injectable({ providedIn: 'root' })
@@ -14,8 +14,12 @@ export class AuthService {
   private readonly apiBase = 'http://localhost:4000/api/auth';
 
   private readonly tokenSignal = signal<string | null>(this.loadToken());
+  private readonly payloadSignal = computed(() => this.decodeToken(this.tokenSignal()));
 
   readonly isAuthenticated = computed(() => !!this.tokenSignal() && this.isTokenValid(this.tokenSignal()));
+  readonly userId = computed(() => this.payloadSignal()?.id ?? null);
+  readonly userRole = computed(() => this.payloadSignal()?.role ?? null);
+  readonly isAdmin = computed(() => this.userRole() === 'admin');
 
   constructor(private http: HttpClient, private router: Router) {}
 
@@ -73,7 +77,8 @@ export class AuthService {
     return payload.exp * 1000 > Date.now();
   }
 
-  private decodeToken(token: string): { exp?: number } | null {
+  private decodeToken(token: string | null): { exp?: number; id?: number; role?: 'admin' | 'user' } | null {
+    if (!token) return null;
     const parts = token.split('.');
     if (parts.length !== 3) return null;
     try {

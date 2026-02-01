@@ -91,7 +91,12 @@ router.post('/', async (req, res) => {
     const parsedWorkspaceId = parseWorkspaceId(workspaceId);
     if (!parsedWorkspaceId) return res.status(400).json({ error: 'Workspace is required' });
 
-    const created = await articlesService.createArticle({ title: title.trim(), content, workspaceId: parsedWorkspaceId });
+    const created = await articlesService.createArticle({
+      title: title.trim(),
+      content,
+      workspaceId: parsedWorkspaceId,
+      userId: req.user.id,
+    });
 
     notifications.notifyArticleUpdate({
       articleId: created.id,
@@ -114,8 +119,20 @@ router.put('/:id', async (req, res) => {
     const parsedWorkspaceId = parseWorkspaceId(workspaceId);
     if (!parsedWorkspaceId) return res.status(400).json({ error: 'Workspace is required' });
 
-    const updated = await articlesService.updateArticle(req.params.id, { title: title.trim(), content, workspaceId: parsedWorkspaceId });
-    if (!updated) return res.status(404).json({ error: 'Article not found' });
+    const existing = await articlesService.getArticleOwner(req.params.id);
+    if (!existing) return res.status(404).json({ error: 'Article not found' });
+
+    const isAdmin = req.user.role === 'admin';
+    const isOwner = existing.userId && req.user.id === existing.userId;
+    if (!isAdmin && !isOwner) {
+      return res.status(403).json({ error: 'You do not have permission to edit this article' });
+    }
+
+    const updated = await articlesService.updateArticle(req.params.id, {
+      title: title.trim(),
+      content,
+      workspaceId: parsedWorkspaceId
+    });
 
     notifications.notifyArticleUpdate({
       articleId: req.params.id,

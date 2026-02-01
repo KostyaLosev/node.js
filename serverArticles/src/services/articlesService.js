@@ -8,6 +8,7 @@ function serializeArticle(article, versionRecord, comments = []) {
 
   return {
     id: article.id,
+    userId: article.userId,
     title: plainVersion.title,
     content: plainVersion.content,
     createdAt: plainVersion.createdAt,
@@ -65,6 +66,7 @@ async function listArticles(workspaceId) {
 
   return articles.map((article) => ({
     id: article.id,
+    userId: article.userId,
     title: article.title,
     createdAt: article.createdAt,
     workspaceId: article.workspaceId,
@@ -90,11 +92,12 @@ async function getArticleById(id, versionOverride = null) {
   return serializeArticle(article, versionRecord, comments.map((comment) => comment.get({ plain: true })));
 }
 
-async function createArticle({ title, content, workspaceId }) {
+async function createArticle({ title, content, workspaceId, userId }) {
   const article = await Article.create({
     title,
     content,
     workspaceId,
+    userId,
     attachments: [],
     currentVersion: 1,
   });
@@ -117,6 +120,10 @@ async function updateArticle(id, { title, content, workspaceId }) {
 
   await createNewVersion(article, { title, content, workspaceId });
   return getArticleById(id);
+}
+
+async function getArticleOwner(id) {
+  return Article.findByPk(id, { attributes: ['id', 'userId'] });
 }
 
 async function deleteArticle(id) {
@@ -191,6 +198,7 @@ module.exports = {
   getArticleById,
   createArticle,
   updateArticle,
+  getArticleOwner,
   deleteArticle,
   addAttachments,
   removeAttachment,

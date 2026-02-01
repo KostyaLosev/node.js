@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnDestroy } from '@angular/core';
+import { Component, inject, signal, OnDestroy, computed } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ArticleService, Article, Comment, ArticleVersion } from '../../services/articlie.service';
 import { CommonModule } from '@angular/common';
@@ -6,6 +6,7 @@ import { FormsModule } from '@angular/forms';
 import { WebSocketService } from '../../services/web-socket.service';
 import { takeUntil } from 'rxjs/operators';
 import { combineLatest, Subject } from 'rxjs';
+import { AuthService } from '../../services/auth.service';
 
 interface ArticleUpdateMessage {
   articleId: string;
@@ -24,6 +25,7 @@ export class ArticleView implements OnDestroy {
   private router = inject(Router);
   private svc = inject(ArticleService);
   private ws = inject(WebSocketService);
+  private auth = inject(AuthService);
   private destroy$ = new Subject<void>();
 
   article = signal<Article | null>(null);
@@ -35,6 +37,14 @@ export class ArticleView implements OnDestroy {
   loading = signal(true);
   error = signal<string | null>(null);
   newComment = '';
+  canEdit = computed(() => {
+    const article = this.article();
+    if (!article) return false;
+    if (this.isOldVersion()) return false;
+    const isAdmin = this.auth.isAdmin();
+    const userId = this.auth.userId();
+    return isAdmin || (!!article.userId && article.userId === userId);
+  });
 
   constructor() {
     combineLatest([this.route.paramMap, this.route.queryParamMap])

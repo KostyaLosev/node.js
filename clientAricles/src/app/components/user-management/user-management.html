@@ -1,0 +1,39 @@
+<section class="user-management">
+  <h2>User Management</h2>
+
+  @if (loading()) {
+    <p>Loading users...</p>
+  } @else if (error()) {
+    <p class="error">{{ error() }}</p>
+  } @else {
+    <table class="user-table">
+      <thead>
+        <tr>
+          <th>Email</th>
+          <th>Role</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (user of users(); track user.id) {
+          <tr>
+            <td>{{ user.email }}</td>
+            <td>
+              <select [ngModel]="user.role" (ngModelChange)="updateRole(user, $event)">
+                <option value="user">User</option>
+                <option value="admin">Admin</option>
+              </select>
+            </td>
+            <td>
+              @if (saving() === user.id) {
+                <span class="status">Saving...</span>
+              } @else {
+                <span class="status">Ready</span>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</section>

@@ -22,6 +22,9 @@ ArticleVersion.belongsTo(Article, { foreignKey: 'articleId', as: 'article' });
 Article.hasMany(Comment, { foreignKey: 'articleId', as: 'comments', onDelete: 'CASCADE' });
 Comment.belongsTo(Article, { foreignKey: 'articleId', as: 'article' });
 
+User.hasMany(Article, { foreignKey: 'userId', as: 'articles' });
+Article.belongsTo(User, { foreignKey: 'userId', as: 'author' });
+
 module.exports = {
   sequelize,
   Article,

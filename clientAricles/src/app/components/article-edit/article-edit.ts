@@ -8,6 +8,7 @@ import { WebSocketService } from '../../services/web-socket.service';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-article-edit',
@@ -21,6 +22,7 @@ export class ArticleEdit implements OnDestroy {
   private svc = inject(ArticleService);
   private fb = inject(FormBuilder);
   private ws = inject(WebSocketService);
+  private auth = inject(AuthService);
   uploadError = signal<string | null>(null);
   private destroy$ = new Subject<void>();
   private snackBar = inject(MatSnackBar);
@@ -75,6 +77,14 @@ export class ArticleEdit implements OnDestroy {
   load(id: number) {
     this.svc.get(id).subscribe({
       next: article => {
+        const isAdmin = this.auth.isAdmin();
+        const userId = this.auth.userId();
+        if (!isAdmin && (!article.userId || article.userId !== userId)) {
+          this.showError('You do not have permission to edit this article.');
+          this.router.navigate(['/article', id]);
+          return;
+        }
+
         this.form.patchValue({
           title: article.title,
           content: article.content,
